@@ -1,28 +1,22 @@
 import openai
+import gradio
 
 with open('hidden.txt') as file:
     openai.api_key = file.read()
 
-def get_api_response(prompt: str) -> str | None:
-    text: str | None = None
+messages = [{"role": "system", "content": 'You are a lawyer that is expert in IPR laws and cyber laws of India so that you can give advice to the client.'}]
 
-    try:
-        response: dict = openai.completion.create(
-            model='gpt-3.5-turbo',
-            prompt=prompt,
-            temperature=0.8,
-            max_tokens=150,
-            top_p=1,
-            frequency_panalty=0,
-            presence_panelty=0.5,
-            stop=[' Human:', ' AI:']
-        )
+def CustomChatGPT(Client_Query):
+    messages.append({"role": "user", "content": Client_Query})
+    response = openai.ChatCompletion.create(
+        model = "gpt-3.5-turbo",
+        messages = messages
 
-        choices: dict = response.get('choices')[0]
-        text = choices.get('text')
-        # print(response)
-    except Exception as e:
-        print('ERROR', e)
-    return text
-prompt = 'Hello there!'
-print(get_api_response(prompt))
+    )
+    ChatGPT_reply = response["choices"][0]["message"]["content"]
+    messages.append({"role": "assistant", "content": ChatGPT_reply})
+    return ChatGPT_reply
+
+demo = gradio.Interface(fn=CustomChatGPT, inputs = "text", outputs = "text", title = "Fazzy LawGPT- An AI Consultant")
+
+demo.launch(share=True)
